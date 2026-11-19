@@ -1,0 +1,6 @@
+{
+  "name": "Quad-Source Dual-Language Bible Reader & Mobile Prompt Studio",
+  "description": "Four-stream parallel scripture comparison from Chinese CUNP (Bible.com), Church KSV/KJV, CenterPlace JST, and Google Translated JST in Chinese, paired with a mobile app prompt engineering studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,137 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Shared Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidHighlightItem(item) {
+      return item is map
+        && item.keys().hasAll(['stream', 'quote', 'color'])
+        && item.keys().hasOnly(['stream', 'quote', 'color'])
+        && item.stream is string
+        && item.stream in ['cunp', 'kjv', 'jst', 'jstChinese']
+        && item.quote is string
+        && item.quote.size() >= 1
+        && item.quote.size() <= 500
+        && item.color is string
+        && item.color in ['amber', 'emerald', 'sky', 'rose'];
+    }
+
+    function isValidVerseAnnotation(data, userId) {
+      return data.keys().hasAll([
+          'ownerId',
+          'bookId',
+          'chapterNumber',
+          'verseNumber',
+          'highlightColor',
+          'noteText',
+          'textHighlights',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId',
+          'bookId',
+          'chapterNumber',
+          'verseNumber',
+          'highlightColor',
+          'noteText',
+          'textHighlights',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId.size() <= 128
+        && data.ownerId == request.auth.uid
+        && data.ownerId == userId
+        && data.bookId is string
+        && data.bookId.size() >= 2
+        && data.bookId.size() <= 10
+        && data.bookId.matches('^[A-Z0-9]+$')
+        && data.chapterNumber is int
+        && data.chapterNumber >= 1
+        && data.chapterNumber <= 200
+        && data.verseNumber is int
+        && data.verseNumber >= 1
+        && data.verseNumber <= 200
+        && data.highlightColor is string
+        && data.highlightColor in ['none', 'amber', 'emerald', 'sky', 'rose']
+        && data.noteText is string
+        && data.noteText.size() <= 5000
+        && data.textHighlights is list
+        && data.textHighlights.size() <= 20
+        && (data.textHighlights.size() == 0 || isValidHighlightItem(data.textHighlights[0]))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // User's private cross-device scripture annotations (highlights & notes)
+    match /users/{userId}/annotations/{annotationId} {
+      allow get: if isOwner(userId)
+        && isValidId(userId)
+        && isValidId(annotationId)
+        && existing().ownerId == request.auth.uid;
+
+      allow list: if isOwner(userId)
+        && existing().ownerId == request.auth.uid;
+
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidId(annotationId)
+        && isValidVerseAnnotation(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidId(annotationId)
+        && isValidVerseAnnotation(incoming(), userId)
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().bookId == existing().bookId
+        && incoming().chapterNumber == existing().chapterNumber
+        && incoming().verseNumber == existing().verseNumber
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'highlightColor',
+          'noteText',
+          'textHighlights',
+          'updatedAt'
+        ]);
+
+      allow delete: if isOwner(userId)
+        && isValidId(userId)
+        && isValidId(annotationId)
+        && existing().ownerId == request.auth.uid;
+    }
+  }
+}

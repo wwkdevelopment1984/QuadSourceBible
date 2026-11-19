@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "VerseAnnotation": {
+      "title": "VerseAnnotation",
+      "description": "User-owned highlight color, phrase highlights, and personal study notes attached to a specific Bible verse for cross-device sync.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user who created this annotation.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "bookId": {
+          "type": "string",
+          "description": "Canonical 3-character uppercase Bible book ID (e.g., GEN, JHN).",
+          "minLength": 2,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]+$"
+        },
+        "chapterNumber": {
+          "type": "integer",
+          "description": "Chapter number within the book (1-200)."
+        },
+        "verseNumber": {
+          "type": "integer",
+          "description": "Verse number within the chapter (1-200)."
+        },
+        "highlightColor": {
+          "type": "string",
+          "description": "Whole-verse highlight color selection.",
+          "enum": ["none", "amber", "emerald", "sky", "rose"]
+        },
+        "noteText": {
+          "type": "string",
+          "description": "Personal study note or reflection text.",
+          "maxLength": 5000
+        },
+        "textHighlights": {
+          "type": "array",
+          "description": "Up to 20 inline phrase highlights within specific verse streams."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-generated creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-generated last-modified timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "bookId",
+        "chapterNumber",
+        "verseNumber",
+        "highlightColor",
+        "noteText",
+        "textHighlights",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/annotations/{annotationId}": {
+      "schema": {
+        "$ref": "#/entities/VerseAnnotation"
+      },
+      "description": "Stores each signed-in user's highlighted phrases, whole-verse highlight colors, and personal reflections per verse."
+    }
+  }
+}

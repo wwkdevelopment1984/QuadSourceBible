@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#451A03" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+  <rect x="36" y="36" width="440" height="440" rx="84" fill="none" stroke="#D97706" stroke-opacity="0.35" stroke-width="4" />
+  <!-- Open Scripture Book -->
+  <path d="M256 156 C210 138, 145 138, 108 158 L108 358 C145 340, 210 340, 256 364 C302 340, 367 340, 404 358 L404 158 C367 138, 302 138, 256 156 Z" fill="#FFFBEB" stroke="#B45309" stroke-width="6" stroke-linejoin="round"/>
+  <line x1="256" y1="156" x2="256" y2="364" stroke="#B45309" stroke-width="5" />
+  <!-- 4 Parallel Lines on Left Page (Chinese & KJV) -->
+  <line x1="138" y1="196" x2="232" y2="196" stroke="#DC2626" stroke-width="10" stroke-linecap="round" />
+  <line x1="138" y1="232" x2="232" y2="232" stroke="#2563EB" stroke-width="10" stroke-linecap="round" />
+  <line x1="138" y1="268" x2="232" y2="268" stroke="#D97706" stroke-width="10" stroke-linecap="round" />
+  <line x1="138" y1="304" x2="232" y2="304" stroke="#059669" stroke-width="10" stroke-linecap="round" />
+  <!-- Sacred Character "聖" on Right Page -->
+  <text x="330" y="278" text-anchor="middle" font-family="serif" font-weight="bold" font-size="112" fill="#78350F">聖</text>
+</svg>

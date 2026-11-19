@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-display: 'Cinzel', serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-chinese: 'Noto Serif TC', 'Noto Serif SC', 'Source Serif 4', serif;
+}
+
+/* Custom scripture reading themes */
+html.theme-sepia {
+  background-color: #f7f3e8;
+  color: #3e3328;
+}
+
+html.theme-sepia body {
+  background-color: #f7f3e8;
+  color: #3e3328;
+}
+
+.theme-sepia .bg-surface {
+  background-color: #f0e9d6;
+}
+
+.theme-sepia .border-surface {
+  border-color: #e4d8bd;
+}
+
+/* Smooth verse highlighting & reading styles */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-scripture {
+  font-family: var(--font-serif);
+}
+
+.font-chinese {
+  font-family: var(--font-chinese);
+}
+
+/* Custom scrollbar for Bible books / chapter grids */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.5);
+}
