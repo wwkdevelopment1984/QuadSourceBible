@@ -291,7 +291,7 @@ export const PromptStudioModal: React.FC<PromptStudioModalProps> = ({
                       </span>
                     </div>
                     <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                      已將三源雙語（和合本 CUNP、教會 KSV、CenterPlace JST、谷歌翻譯）及聖經人物查經模組之完整行動端系統架構提示詞永久保存為獨立檔案，可隨時取用、複製或直接提供給 Cursor / Claude / AI Studio 進行開發。
+                      已將三源雙語（和合本 CUNP、教會 KJV、CenterPlace JST、谷歌翻譯）及聖經人物查經模組之完整行動端系統架構提示詞永久保存為獨立檔案，可隨時取用、複製或直接提供給 Cursor / Claude / AI Studio 進行開發。
                     </p>
                     <div className="pt-1 flex items-center gap-2 font-mono text-[11px] text-stone-500">
                       <span>檔案路徑：/MOBILE_APP_PROMPT.md</span>
@@ -334,7 +334,7 @@ export const PromptStudioModal: React.FC<PromptStudioModalProps> = ({
                         <p className="ml-5 text-stone-500">來源: bible.com/bible/46/JHN.1.CUNP-神</p>
                       </li>
                       <li>
-                        <strong className="text-blue-700 dark:text-blue-400">第二順位：KSV / KJV Bible (教會欽定版聖經)</strong>
+                        <strong className="text-blue-700 dark:text-blue-400">第二順位：KJV Bible (教會欽定版聖經)</strong>
                         <p className="ml-5 text-stone-500">來源: churchofjesuschrist.org/study/scriptures</p>
                       </li>
                       <li>
@@ -359,7 +359,7 @@ export const PromptStudioModal: React.FC<PromptStudioModalProps> = ({
   chapter_number INTEGER NOT NULL,-- e.g. 1
   verse_number INTEGER NOT NULL,  -- e.g. 1
   chinese_cunp TEXT NOT NULL,     -- 1. 和合本 (bible.com)
-  kjv_text TEXT NOT NULL,         -- 2. KSV / KJV (churchofjesuschrist.org)
+  kjv_text TEXT NOT NULL,         -- 2. KJV Bible (churchofjesuschrist.org)
   jst_text TEXT NOT NULL,         -- 3. JST (centerplace.org)
   jst_chinese TEXT NOT NULL,      -- 4. JST 谷歌翻譯中文版
   is_diff_from_kjv BOOLEAN,       -- JST 是否與 KJV 存在修訂

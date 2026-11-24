@@ -12,6 +12,7 @@ import {
   ChapterData,
   ChineseVariant,
   FontSize,
+  StreamDisplayMode,
 } from '../types/scripture';
 import { BIBLE_BOOKS } from '../data/bibleBooks';
 import { loadChapterWithCache } from '../utils/chapterLoader';
@@ -32,6 +33,7 @@ interface StudyPaneProps {
   fontSize: FontSize;
   chineseVariant: ChineseVariant;
   diffHighlight: boolean;
+  streamDisplayMode: StreamDisplayMode;
   onChangeBookChapter: (book: BibleBook, chapter: number) => void;
   onOpenBookPicker: () => void;
   onPromoteToSingle: () => void;
@@ -47,6 +49,7 @@ export const StudyPane: React.FC<StudyPaneProps> = ({
   fontSize,
   chineseVariant,
   diffHighlight,
+  streamDisplayMode,
   onChangeBookChapter,
   onOpenBookPicker,
   onPromoteToSingle,
@@ -308,6 +311,7 @@ export const StudyPane: React.FC<StudyPaneProps> = ({
               fontSize={fontSize}
               diffHighlight={diffHighlight}
               viewMode="cards"
+              streamDisplayMode={streamDisplayMode}
               anchorId={`pane-${paneIndex}-verse-${verse.verseNumber}`}
             />
           ))

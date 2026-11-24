@@ -17,7 +17,7 @@ import {
   HardDrive,
   X,
 } from 'lucide-react';
-import { ParallelVerse, ChapterSourceUrls, FontSize, ViewMode } from '../types/scripture';
+import { ParallelVerse, ChapterSourceUrls, FontSize, ViewMode, StreamDisplayMode } from '../types/scripture';
 import { useAnnotations } from '../contexts/AnnotationsContext';
 import {
   ActiveHighlightColor,
@@ -37,6 +37,7 @@ interface VerseCardProps {
   fontSize: FontSize;
   diffHighlight: boolean;
   viewMode: ViewMode;
+  streamDisplayMode?: StreamDisplayMode;
   anchorId?: string;
   onAnalyzeDiff?: (verse: ParallelVerse) => Promise<string>;
 }
@@ -53,6 +54,7 @@ export const VerseCard: React.FC<VerseCardProps> = ({
   fontSize,
   diffHighlight,
   viewMode,
+  streamDisplayMode = 'all',
   anchorId,
 }) => {
   const noteBookId = (bookId || bookName).trim().toUpperCase();
@@ -174,9 +176,10 @@ export const VerseCard: React.FC<VerseCardProps> = ({
 
   const normalizeForCompare = (text: string) =>
     text
+      .replace(/[“”"‘’'.,:;!?()[\]—-]/g, '')
       .replace(/\s+/g, ' ')
-      .replace(/[“”"‘’']/g, '')
-      .trim();
+      .trim()
+      .toLowerCase();
 
   const hasCunp = Boolean(verse.chineseCunp && verse.chineseCunp.trim().length > 0);
   const hasKjv = Boolean(verse.kjvText && verse.kjvText.trim().length > 0);
@@ -185,10 +188,15 @@ export const VerseCard: React.FC<VerseCardProps> = ({
   const isJstExpanded = verse.alignmentType === 'jst-expanded';
   const isJstSameAsKjv = Boolean(
     hasKjv &&
-      hasCunp &&
       !verse.isDiffFromKjv &&
       normalizeForCompare(verse.jstText) === normalizeForCompare(verse.kjvText!)
   );
+
+  const showCunpStream = hasCunp;
+  const showKjvStream = hasKjv && (streamDisplayMode === 'cunp-kjv' || streamDisplayMode === 'all');
+  const showJstStreams = streamDisplayMode === 'all' && !isJstSameAsKjv;
+  const visibleColumnCount =
+    (showCunpStream ? 1 : 0) + (showKjvStream ? 1 : 0) + (showJstStreams ? 2 : 0);
 
   // Text-to-speech helper
   const handleSpeak = (text: string, lang: 'zh-CN' | 'zh-TW' | 'en-US', streamId: string) => {
@@ -215,30 +223,31 @@ export const VerseCard: React.FC<VerseCardProps> = ({
     const personalNoteBlock = savedNoteText
       ? `\n\n[個人筆記 Personal Note]:\n${savedNoteText}`
       : '';
-    const stream4CopyText = isJstSameAsKjv
-      ? '與和合本 (CUNP) 相同 (Same as CUNP Bible — JST matches KJV)'
-      : verse.jstChinese;
-    const textToCopy = isJstStandalone
-      ? `【${chineseBookName} / ${bookName} ${chapterNumber}:${verse.verseNumber} · JST 獨立增補經文】
-JST Bible (CenterPlace Inspired Version):
-${verse.jstText}
+    const sections: string[] = [];
+    const sourcesUsed: string[] = [];
 
-JST 聖經 (谷歌翻譯中文版 Google Translate):
-${verse.jstChinese}
-(來源: centerplace.org)${personalNoteBlock}`
-      : `【${chineseBookName} / ${bookName} ${chapterNumber}:${verse.verseNumber}】
-1. 中文聖經 (和合本 CUNP):
-${verse.chineseCunp}
+    if (showCunpStream) {
+      sections.push(`1. 中文聖經 (和合本 CUNP):\n${verse.chineseCunp}`);
+      sourcesUsed.push('bible.com');
+    }
+    if (showKjvStream) {
+      sections.push(`2. KJV Bible (Church of Jesus Christ):\n${verse.kjvText}`);
+      sourcesUsed.push('churchofjesuschrist.org');
+    }
+    if (showJstStreams) {
+      const jstIndex = showCunpStream || showKjvStream ? 3 : 1;
+      sections.push(`${jstIndex}. JST Bible (CenterPlace Inspired Version):\n${verse.jstText}`);
+      sections.push(`${jstIndex + 1}. JST 聖經 (谷歌翻譯中文版):\n${verse.jstChinese}`);
+      sourcesUsed.push('centerplace.org');
+    } else if (streamDisplayMode === 'all' && isJstSameAsKjv) {
+      sections.push('(JST 與 KJV 原文相同，已省略顯示)');
+    }
 
-2. KSV / KJV Bible (Church of Jesus Christ):
-${verse.kjvText}
-
-3. JST Bible (CenterPlace Inspired Version):
-${verse.jstText}
-
-4. JST 聖經 (谷歌翻譯中文版):
-${stream4CopyText}
-(來源: bible.com | churchofjesuschrist.org | centerplace.org)${personalNoteBlock}`;
+    const headerSuffix = isJstStandalone ? ' · JST 獨立增補經文' : '';
+    const textToCopy =
+      sections.length > 0
+        ? `【${chineseBookName} / ${bookName} ${chapterNumber}:${verse.verseNumber}${headerSuffix}】\n${sections.join('\n\n')}\n(來源: ${sourcesUsed.join(' | ')})${personalNoteBlock}`
+        : `【${chineseBookName} / ${bookName} ${chapterNumber}:${verse.verseNumber}】${personalNoteBlock}`;
 
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
@@ -519,6 +528,12 @@ ${stream4CopyText}
             </span>
           )}
 
+          {streamDisplayMode === 'all' && isJstSameAsKjv && (
+            <span className="text-[11px] text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800/80 px-2 py-0.5 rounded-md">
+              JST 同 KJV（不重複顯示 JST）
+            </span>
+          )}
+
           {verse.kjvVerseRef && (
             <span className="text-[11px] text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800/80 px-2 py-0.5 rounded-md">
               {verse.kjvVerseRef}
@@ -648,16 +663,29 @@ ${stream4CopyText}
         </div>
       )}
 
-      {/* Parallel Streams: 4 columns/streams when KJV & CUNP exist; JST Standalone (2 streams) when KJV & CUNP do not exist */}
+      {/* Parallel Streams driven by streamDisplayMode & JST comparison */}
       <div
         className={
           viewMode === 'columns'
-            ? `grid grid-cols-1 ${isJstStandalone ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4`
+            ? `grid grid-cols-1 ${
+                visibleColumnCount >= 4
+                  ? 'lg:grid-cols-4'
+                  : visibleColumnCount >= 2
+                  ? 'lg:grid-cols-2'
+                  : ''
+              } gap-4`
             : 'space-y-3.5 divide-y divide-stone-100 dark:divide-stone-800/60'
         }
       >
+        {/* Notice when verse is JST-only and user selected a mode without JST */}
+        {visibleColumnCount === 0 && (
+          <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-dashed border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300">
+            此節為 JST 靈感譯本獨有增補經文（和合本 CUNP 與 KJV 無此節），請於上方「顯示版本」切換為「3. CUNP + KJV + JST + JST Google Translate」即可檢視。
+          </div>
+        )}
+
         {/* STREAM 1: Chinese Bible (和合本 CUNP 神版 - bible.com) */}
-        {hasCunp && (
+        {showCunpStream && (
           <div
             ref={streamRefs.cunp}
             onMouseUp={() => handleCaptureSelection('cunp')}
@@ -703,8 +731,8 @@ ${stream4CopyText}
           </div>
         )}
 
-        {/* STREAM 2: KSV / KJV Bible (Church of Jesus Christ) */}
-        {hasKjv && (
+        {/* STREAM 2: KJV Bible (Church of Jesus Christ) */}
+        {showKjvStream && (
           <div
             ref={streamRefs.kjv}
             onMouseUp={() => handleCaptureSelection('kjv')}
@@ -720,7 +748,7 @@ ${stream4CopyText}
             <div className="flex items-center justify-between text-xs mb-1.5 text-stone-500 dark:text-stone-400">
               <span className="font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-blue-600" />
-                2. KSV / KJV Bible（教會欽定版聖經）
+                2. KJV Bible（教會欽定版聖經）
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -756,122 +784,105 @@ ${stream4CopyText}
           </div>
         )}
 
-        {/* STREAM 3: JST Bible (CenterPlace Inspired Version) */}
-        <div
-          ref={streamRefs.jst}
-          onMouseUp={() => handleCaptureSelection('jst')}
-          onTouchEnd={() => setTimeout(() => handleCaptureSelection('jst'), 120)}
-          className={
-            viewMode === 'columns'
-              ? 'p-3 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30'
-              : hasCunp || hasKjv
-              ? 'pt-3.5'
-              : 'pt-1'
-          }
-        >
-          <div className="flex items-center justify-between text-xs mb-1.5 text-amber-900 dark:text-amber-400">
-            <span className="font-semibold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-amber-600" />
-              {isJstStandalone
-                ? '1. JST Bible（約瑟·斯密靈感譯本 · Standalone）'
-                : '3. JST Bible（約瑟·斯密靈感譯本）'}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleSpeak(verse.jstText, 'en-US', `en-jst-${verse.verseNumber}`)}
-                className="hover:text-stone-800 dark:hover:text-stone-200 p-0.5"
-                title="Read English JST verse"
-              >
-                <Volume2
-                  className={`w-3.5 h-3.5 ${
-                    isSpeaking === `en-jst-${verse.verseNumber}`
-                      ? 'text-amber-700 dark:text-amber-400 animate-pulse'
-                      : ''
-                  }`}
-                />
-              </button>
-              <a
-                href={sourceUrls.centerplaceJst}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:underline flex items-center gap-0.5"
-                title="Open centerplace.org Inspired Version"
-              >
-                <span className="hidden sm:inline">centerplace.org</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-          <p
-            className={`font-scripture text-stone-900 dark:text-stone-100 leading-relaxed select-text ${fontClass} ${
-              verse.isDiffFromKjv || isJstOnly ? 'font-medium' : ''
-            }`}
-          >
-            {renderJstText(verse.jstText)}
-          </p>
-          {renderSelectionPopup('jst')}
-          {renderPhraseHighlightChips('jst')}
-        </div>
-
-        {/* STREAM 4: JST Bible (Google Translate into Chinese) */}
-        <div
-          ref={streamRefs.jstChinese}
-          onMouseUp={() => !isJstSameAsKjv && handleCaptureSelection('jstChinese')}
-          onTouchEnd={() =>
-            !isJstSameAsKjv && setTimeout(() => handleCaptureSelection('jstChinese'), 120)
-          }
-          className={
-            viewMode === 'columns'
-              ? isJstSameAsKjv
-                ? 'p-3 rounded-xl bg-stone-50/70 dark:bg-stone-900/40 border border-stone-200/70 dark:border-stone-800'
-                : 'p-3 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30'
-              : 'pt-3.5'
-          }
-        >
-          <div className="flex items-center justify-between text-xs mb-1.5 text-emerald-900 dark:text-emerald-400">
-            <span className="font-semibold flex items-center gap-1">
-              <span
-                className={`w-2 h-2 rounded-full ${isJstSameAsKjv ? 'bg-stone-400' : 'bg-emerald-600'}`}
-              />
-              {isJstStandalone
-                ? '2. JST 聖經（谷歌翻譯中文版 Google Translate）'
-                : '4. JST 聖經（谷歌翻譯中文版 Google Translate）'}
-            </span>
-            <div className="flex items-center gap-2">
-              {!isJstSameAsKjv && (
-                <button
-                  onClick={() =>
-                    handleSpeak(verse.jstChinese, 'zh-TW', `zh-jst-${verse.verseNumber}`)
-                  }
-                  className="hover:text-stone-800 dark:hover:text-stone-200 p-0.5"
-                  title="朗讀 JST 中文翻譯經文"
-                >
-                  <Volume2
-                    className={`w-3.5 h-3.5 ${
-                      isSpeaking === `zh-jst-${verse.verseNumber}`
-                        ? 'text-emerald-700 dark:text-emerald-400 animate-pulse'
-                        : ''
-                    }`}
-                  />
-                </button>
-              )}
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-xs ${
-                  isJstSameAsKjv
-                    ? 'text-stone-600 dark:text-stone-400 bg-stone-200/70 dark:bg-stone-800'
-                    : 'text-emerald-700/80 dark:text-emerald-400/80 bg-emerald-100/70 dark:bg-emerald-950/80'
+        {/* STREAM 3 & 4: Only display JST Bible & its Chinese translation when mode is 'all' and JST differs from KJV */}
+        {showJstStreams && (
+          <>
+            {/* STREAM 3: JST Bible (CenterPlace Inspired Version) */}
+            <div
+              ref={streamRefs.jst}
+              onMouseUp={() => handleCaptureSelection('jst')}
+              onTouchEnd={() => setTimeout(() => handleCaptureSelection('jst'), 120)}
+              className={
+                viewMode === 'columns'
+                  ? 'p-3 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30'
+                  : hasCunp || hasKjv
+                  ? 'pt-3.5'
+                  : 'pt-1'
+              }
+            >
+              <div className="flex items-center justify-between text-xs mb-1.5 text-amber-900 dark:text-amber-400">
+                <span className="font-semibold flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-600" />
+                  {isJstStandalone
+                    ? '1. JST Bible（約瑟·斯密靈感譯本 · Standalone）'
+                    : '3. JST Bible（約瑟·斯密靈感譯本）'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleSpeak(verse.jstText, 'en-US', `en-jst-${verse.verseNumber}`)}
+                    className="hover:text-stone-800 dark:hover:text-stone-200 p-0.5"
+                    title="Read English JST verse"
+                  >
+                    <Volume2
+                      className={`w-3.5 h-3.5 ${
+                        isSpeaking === `en-jst-${verse.verseNumber}`
+                          ? 'text-amber-700 dark:text-amber-400 animate-pulse'
+                          : ''
+                      }`}
+                    />
+                  </button>
+                  <a
+                    href={sourceUrls.centerplaceJst}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline flex items-center gap-0.5"
+                    title="Open centerplace.org Inspired Version"
+                  >
+                    <span className="hidden sm:inline">centerplace.org</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+              <p
+                className={`font-scripture text-stone-900 dark:text-stone-100 leading-relaxed select-text ${fontClass} ${
+                  verse.isDiffFromKjv || isJstOnly ? 'font-medium' : ''
                 }`}
               >
-                {isJstSameAsKjv ? 'Same as CUNP' : 'Google Translate'}
-              </span>
+                {renderJstText(verse.jstText)}
+              </p>
+              {renderSelectionPopup('jst')}
+              {renderPhraseHighlightChips('jst')}
             </div>
-          </div>
-          {isJstSameAsKjv ? (
-            <p className="text-xs sm:text-sm italic text-stone-500 dark:text-stone-400 bg-stone-100/70 dark:bg-stone-800/50 rounded-lg px-3 py-2 border border-dashed border-stone-200 dark:border-stone-700">
-              與和合本 (CUNP) 相同 · Same as CUNP Bible（此節 JST 與 KJV 原文一致，無須另行翻譯）
-            </p>
-          ) : (
-            <>
+
+            {/* STREAM 4: JST Bible (Google Translate into Chinese) */}
+            <div
+              ref={streamRefs.jstChinese}
+              onMouseUp={() => handleCaptureSelection('jstChinese')}
+              onTouchEnd={() => setTimeout(() => handleCaptureSelection('jstChinese'), 120)}
+              className={
+                viewMode === 'columns'
+                  ? 'p-3 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30'
+                  : 'pt-3.5'
+              }
+            >
+              <div className="flex items-center justify-between text-xs mb-1.5 text-emerald-900 dark:text-emerald-400">
+                <span className="font-semibold flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  {isJstStandalone
+                    ? '2. JST 聖經（谷歌翻譯中文版 Google Translate）'
+                    : '4. JST 聖經（谷歌翻譯中文版 Google Translate）'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      handleSpeak(verse.jstChinese, 'zh-TW', `zh-jst-${verse.verseNumber}`)
+                    }
+                    className="hover:text-stone-800 dark:hover:text-stone-200 p-0.5"
+                    title="朗讀 JST 中文翻譯經文"
+                  >
+                    <Volume2
+                      className={`w-3.5 h-3.5 ${
+                        isSpeaking === `zh-jst-${verse.verseNumber}`
+                          ? 'text-emerald-700 dark:text-emerald-400 animate-pulse'
+                          : ''
+                      }`}
+                    />
+                  </button>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-xs text-emerald-700/80 dark:text-emerald-400/80 bg-emerald-100/70 dark:bg-emerald-950/80">
+                    Google Translate
+                  </span>
+                </div>
+              </div>
               <p
                 className={`font-chinese text-stone-900 dark:text-stone-100 leading-relaxed select-text ${fontClass}`}
               >
@@ -879,9 +890,9 @@ ${stream4CopyText}
               </p>
               {renderSelectionPopup('jstChinese')}
               {renderPhraseHighlightChips('jstChinese')}
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Personal Reflection / Study Note Section (Synced across devices when signed in) */}

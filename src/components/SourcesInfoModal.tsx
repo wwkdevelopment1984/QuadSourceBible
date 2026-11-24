@@ -23,7 +23,7 @@ export const SourcesInfoModal: React.FC<SourcesInfoModalProps> = ({ isOpen, onCl
     },
     {
       num: '2',
-      title: 'KSV / KJV Bible (耶穌基督後期聖徒教會欽定版)',
+      title: 'KJV Bible (耶穌基督後期聖徒教會欽定版)',
       englishTitle: 'King James Version (LDS Scriptures Edition)',
       url: 'https://www.churchofjesuschrist.org/study/scriptures?lang=eng&platform=web',
       displayUrl: 'churchofjesuschrist.org/study/scriptures',

@@ -25,6 +25,7 @@ import {
   FontSize,
   ChineseVariant,
   ViewMode,
+  StreamDisplayMode,
 } from './types/scripture';
 import { BIBLE_BOOKS, getBookById } from './data/bibleBooks';
 import {
@@ -53,6 +54,7 @@ import { FloatingStudyControls } from './components/FloatingStudyControls';
 const STORAGE_KEY_LAST_READ = 'quad_scripture_last_read';
 const STORAGE_KEY_INITIAL_COMPLETED = 'quad_scripture_initial_completed';
 const STORAGE_KEY_STUDY_PANES = 'quad_scripture_study_panes_v1';
+const STORAGE_KEY_STREAM_DISPLAY = 'quad_scripture_stream_display_v1';
 
 interface SavedPosition {
   bookId: string;
@@ -172,6 +174,25 @@ export default function App() {
   const [chineseVariant, setChineseVariant] = useState<ChineseVariant>('traditional');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [diffHighlight, setDiffHighlight] = useState<boolean>(true);
+  const [streamDisplayMode, setStreamDisplayMode] = useState<StreamDisplayMode>(() => {
+    try {
+      const savedMode = localStorage.getItem(STORAGE_KEY_STREAM_DISPLAY);
+      if (savedMode === 'cunp' || savedMode === 'cunp-kjv' || savedMode === 'all') {
+        return savedMode;
+      }
+    } catch {
+      // ignore storage error
+    }
+    return 'all';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_STREAM_DISPLAY, streamDisplayMode);
+    } catch {
+      // ignore storage error
+    }
+  }, [streamDisplayMode]);
 
   // Modals
   const [isBookModalOpen, setIsBookModalOpen] = useState<boolean>(false);
@@ -258,21 +279,6 @@ export default function App() {
     setSelectedChapter(remaining[0].chapter);
     persistPosition(nextPrimaryBook.id, remaining[0].chapter);
     setStudyCount((studyCount - 1) as 1 | 2 | 3 | 4);
-    setMobileFocusPane('all');
-  };
-
-  const applyStudyPreset = (slotsToApply: StudyPaneConfig[]) => {
-    const cnt = Math.min(4, Math.max(1, slotsToApply.length)) as 1 | 2 | 3 | 4;
-    const padded = [...slotsToApply];
-    while (padded.length < 4) {
-      padded.push(studySlots[padded.length] || { bookId: 'JAS', chapter: 1 });
-    }
-    const primaryBook = getBookById(padded[0].bookId) || selectedBook;
-    setStudySlots(padded);
-    setStudyCount(cnt);
-    setSelectedBook(primaryBook);
-    setSelectedChapter(padded[0].chapter);
-    persistPosition(primaryBook.id, padded[0].chapter);
     setMobileFocusPane('all');
   };
 
@@ -570,48 +576,39 @@ export default function App() {
             )}
           </div>
 
-          {/* Quick Cross-Reference Study Presets when 2+ books or quick launch */}
-          <div className="flex items-center gap-1.5 overflow-x-auto text-xs whitespace-nowrap">
-            <span className="text-stone-400 text-[11px] font-medium shrink-0">交叉對讀推薦：</span>
-            <button
-              type="button"
-              onClick={() =>
-                applyStudyPreset([
-                  { bookId: 'GEN', chapter: 1 },
-                  { bookId: 'JHN', chapter: 1 },
-                ])
-              }
-              className="px-2.5 py-1 rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/70 hover:border-amber-500 text-stone-700 dark:text-stone-200 font-medium transition-colors shrink-0"
+          {/* Scripture Stream Display Selector (1. CUNP, 2. CUNP + KJV, 3. CUNP + KJV + JST + JST Google Translate) */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-stone-600 dark:text-stone-300 font-semibold whitespace-nowrap shrink-0">
+              顯示譯本：
+            </span>
+            <div
+              role="radiogroup"
+              aria-label="顯示經文譯本選項"
+              className="flex flex-wrap items-center gap-1 p-1 bg-stone-100 dark:bg-stone-800 rounded-lg font-medium"
             >
-              2卷：創世記1 + 約翰1
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                applyStudyPreset([
-                  { bookId: 'GEN', chapter: 1 },
-                  { bookId: 'JHN', chapter: 1 },
-                  { bookId: 'MAT', chapter: 5 },
-                ])
-              }
-              className="px-2.5 py-1 rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/70 hover:border-amber-500 text-stone-700 dark:text-stone-200 font-medium transition-colors shrink-0"
-            >
-              3卷：創1 + 約1 + 太5
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                applyStudyPreset([
-                  { bookId: 'GEN', chapter: 14 },
-                  { bookId: 'GEN', chapter: 50 },
-                  { bookId: 'MAT', chapter: 5 },
-                  { bookId: 'JAS', chapter: 1 },
-                ])
-              }
-              className="px-2.5 py-1 rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/70 hover:border-amber-500 text-stone-700 dark:text-stone-200 font-medium transition-colors shrink-0"
-            >
-              4卷：創14 + 創50 + 太5 + 雅1
-            </button>
+              {(
+                [
+                  { id: 'cunp', label: '1. CUNP' },
+                  { id: 'cunp-kjv', label: '2. CUNP + KJV' },
+                  { id: 'all', label: '3. CUNP + KJV + JST + JST Google Translate' },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={streamDisplayMode === option.id}
+                  onClick={() => setStreamDisplayMode(option.id)}
+                  className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 ${
+                    streamDisplayMode === option.id
+                      ? 'bg-amber-900 text-white dark:bg-amber-700 font-semibold shadow-2xs'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
         {/* Resumed Progress Toast / Notice */}
@@ -711,6 +708,7 @@ export default function App() {
                     fontSize={fontSize}
                     chineseVariant={chineseVariant}
                     diffHighlight={diffHighlight}
+                    streamDisplayMode={streamDisplayMode}
                     onChangeBookChapter={(nextBook, nextChap) =>
                       handleSelectForSlot(idx, nextBook, nextChap)
                     }
@@ -761,12 +759,20 @@ export default function App() {
                   <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span>每節經文依序展示：</span>
                     <span className="text-red-700 dark:text-red-400 font-medium">① 中文和合本 (bible.com)</span>
-                    <span>→</span>
-                    <span className="text-blue-700 dark:text-blue-400 font-medium">② KSV / KJV (教會聖經庫)</span>
-                    <span>→</span>
-                    <span className="text-amber-700 dark:text-amber-400 font-medium">③ JST 靈感譯本 (centerplace.org)</span>
-                    <span>→</span>
-                    <span className="text-emerald-700 dark:text-emerald-400 font-medium">④ JST 谷歌翻譯中文</span>
+                    {(streamDisplayMode === 'cunp-kjv' || streamDisplayMode === 'all') && (
+                      <>
+                        <span>→</span>
+                        <span className="text-blue-700 dark:text-blue-400 font-medium">② KJV Bible (教會聖經庫)</span>
+                      </>
+                    )}
+                    {streamDisplayMode === 'all' && (
+                      <>
+                        <span>→</span>
+                        <span className="text-amber-700 dark:text-amber-400 font-medium">③ JST 靈感譯本 (centerplace.org)</span>
+                        <span>→</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-medium">④ JST 谷歌翻譯中文</span>
+                      </>
+                    )}
                   </p>
                 </div>
 
@@ -835,7 +841,7 @@ export default function App() {
                     rel="noreferrer"
                     className="text-stone-600 dark:text-stone-300 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1 hover:underline"
                   >
-                    <span>教會 KSV 聖經庫</span>
+                    <span>教會 KJV 聖經庫</span>
                     <ExternalLink className="w-3 h-3 text-stone-400" />
                   </a>
                   <span className="text-stone-300 dark:text-stone-700">·</span>
@@ -997,7 +1003,7 @@ export default function App() {
                   </h2>
                 </div>
                 <p className="text-xs text-amber-200/90 leading-relaxed max-w-2xl">
-                  依據您所指定的 3 大來源（教會 KSV、CenterPlace JST、Bible.com 中文）與兩大語言次序，隨時生成
+                  依據您所指定的 3 大來源（教會 KJV、CenterPlace JST、Bible.com 中文）與兩大語言次序，隨時生成
                   Flutter、React Native、Swift 或 Kotlin 行動端 App 的完整代碼提示詞與離線資料庫規範。
                 </p>
               </div>
@@ -1063,7 +1069,7 @@ export default function App() {
                 <Loader2 className="w-8 h-8 animate-spin text-amber-800 dark:text-amber-400" />
                 <span className="text-sm font-serif">載入四部並行聖經經文中...</span>
                 <span className="text-xs text-stone-400">
-                  整合 Bible.com 和合本、教會 KSV、CenterPlace JST 與中文翻譯
+                  整合 Bible.com 和合本、教會 KJV、CenterPlace JST 與中文翻譯
                 </span>
               </div>
             ) : displayedVerses.length > 0 ? (
@@ -1080,6 +1086,7 @@ export default function App() {
                     fontSize={fontSize}
                     diffHighlight={diffHighlight}
                     viewMode={viewMode}
+                    streamDisplayMode={streamDisplayMode}
                   />
                 ))}
               </div>
@@ -1135,7 +1142,7 @@ export default function App() {
       <footer className="mt-12 py-6 border-t border-stone-200 dark:border-stone-800 text-center text-xs text-stone-500 dark:text-stone-400">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
           <p>
-            雙語四部並行聖經對照庫 · 聚合 Bible.com (CUNP) · Church of Jesus Christ (KSV) · CenterPlace (JST) · Google Translate
+            雙語四部並行聖經對照庫 · 聚合 Bible.com (CUNP) · Church of Jesus Christ (KJV) · CenterPlace (JST) · Google Translate
           </p>
           <p className="text-[11px] text-stone-400 dark:text-stone-500">
             支援 PWA 離線安裝閱讀與 IndexedDB 經文快取 · 旨在便利華語聖經研讀者深入了解約瑟·斯密靈感譯本。

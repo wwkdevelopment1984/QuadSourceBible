@@ -153,7 +153,7 @@ app.get('/api/scriptures/chapter', async (req, res) => {
     try {
       const prompt = `You are an expert biblical scholar and translator with deep knowledge of:
 1. The Chinese Union Version with New Punctuation (CUNP 神版) from bible.com
-2. The King James Version (KJV / KSV) from the Church of Jesus Christ of Latter-day Saints
+2. The King James Version (KJV) from the Church of Jesus Christ of Latter-day Saints
 3. The Joseph Smith Translation (JST / Holy Scriptures Inspired Version) from centerplace.org
 4. Modern faithful Chinese translation of the JST text (via Google Translate style).
 

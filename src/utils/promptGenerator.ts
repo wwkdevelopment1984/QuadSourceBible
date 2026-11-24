@@ -59,7 +59,7 @@ For every verse displayed in any book and chapter, the user interface **MUST** r
    - Primary Source: \`https://www.bible.com/bible/46/JHN.1.CUNP-%E7%A5%9Eble\` (YouVersion / Bible.com Chinese Union Version with New Punctuation - Shen edition).
    - Display: Primary Chinese scripture text with refined Chinese serif typography (Noto Serif SC/TC).
 
-2. **Second: KSV / KJV Bible (King James Version - LDS Edition)**
+2. **Second: KJV Bible (King James Version - LDS Edition)**
    - Primary Source: \`https://www.churchofjesuschrist.org/study/scriptures?lang=eng&platform=web\` (The Church of Jesus Christ of Latter-day Saints English scripture database).
    - Display: Classical English King James text with verse numbering.
 
@@ -97,7 +97,7 @@ For every verse displayed in any book and chapter, the user interface **MUST** r
 2. **Verse Presentation Layout**:
    - **Stacked Card Mode (Mobile default)**: Each verse number has an outer container displaying the 4 parallel streams as distinct, beautifully styled sub-sections:
      - 🀄 [Chinese CUNP]: High-legibility Chinese serif font.
-     - 📖 [Church KSV/KJV]: Deep charcoal serif typography.
+     - 📖 [Church KJV]: Deep charcoal serif typography.
      - 📜 [CenterPlace JST]: Distinctive warm accent with indicator badge if different from KJV.
      - 🌐 [JST Google Translate]: Clear translated Chinese with matching verse reference.
    - **Columnar Grid Mode (Tablet / Landscape)**: Side-by-side 4-column synchronized scrolling.
@@ -195,7 +195,7 @@ Please output:
 2. The SQLite / IndexedDB offline database schema & migrations for verses, biblical figures, and local-only personal verse notes (\`user_verse_notes\`).
 3. First-page Old/New Testament Selection Portal, persistent reading position resume, and Book & Chapter Picker widget/screen with responsive thumb navigation.
 4. The Parallel Verse Reader screen implementing the exact 4-stream order:
-   **(1) Chinese CUNP -> (2) KSV Bible -> (3) JST Bible -> (4) JST Google Translate**, automatic **JST Standalone mode** when KJV/CUNP do not exist, and **"Same as CUNP Bible"** notice when JST matches KJV.
+   **(1) Chinese CUNP -> (2) KJV Bible -> (3) JST Bible -> (4) JST Google Translate**, automatic **JST Standalone mode** when KJV/CUNP do not exist, and omit redundant JST sections when JST matches KJV.
 5. Inline local-only Personal Verse Notes editor inside each Verse Card, Biblical Person Explorer (English/Chinese search), and Settings sheet for Theme, Font Size, View Mode, Chinese Variant, and Offline Book Cache Management.
 `;
 }

@@ -24,7 +24,7 @@ export interface ParallelVerse {
   kjvVerseRef?: string;
   // 1. Chinese Bible from bible.com (CUNP 神版) — null when verse is JST-only addition
   chineseCunp: string | null;
-  // 2. KSV / KJV Bible from churchofjesuschrist.org — null when verse is JST-only addition
+  // 2. KJV Bible from churchofjesuschrist.org — null when verse is JST-only addition
   kjvText: string | null;
   // 3. JST Bible from centerplace.org (Inspired Version)
   jstText: string;
@@ -60,6 +60,7 @@ export type ReaderTheme = 'parchment' | 'sepia' | 'night';
 export type FontSize = 'sm' | 'base' | 'lg' | 'xl';
 export type ChineseVariant = 'traditional' | 'simplified';
 export type ViewMode = 'cards' | 'columns' | 'compact';
+export type StreamDisplayMode = 'cunp' | 'cunp-kjv' | 'all';
 
 export interface MobilePromptConfig {
   framework: MobileFramework;

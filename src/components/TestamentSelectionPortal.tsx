@@ -148,7 +148,7 @@ export const TestamentSelectionPortal: React.FC<TestamentSelectionPortalProps> =
                 雙語四部對照聖經
               </div>
               <div className="text-[11px] text-stone-500 dark:text-stone-400">
-                Bible.com 和合本 · 教會 KSV · CenterPlace JST · 谷歌翻譯中文
+                Bible.com 和合本 · 教會 KJV · CenterPlace JST · 谷歌翻譯中文
               </div>
             </div>
           </div>
@@ -468,7 +468,7 @@ export const TestamentSelectionPortal: React.FC<TestamentSelectionPortalProps> =
             {/* Featured Chapter Notice */}
             {selectedBook.id === 'JHN' && (
               <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-300 flex items-center justify-between">
-                <span>約翰福音第 1 章：收錄全部 51 節完整四部並行聖經（CUNP、KSV、JST、谷歌翻譯）</span>
+                <span>約翰福音第 1 章：收錄全部 51 節完整四部並行聖經（CUNP、KJV、JST、谷歌翻譯）</span>
                 <button
                   onClick={() => handleChooseChapter(1)}
                   className="px-3 py-1 bg-amber-900 text-white rounded-lg font-bold text-xs shrink-0"
@@ -567,7 +567,7 @@ export const TestamentSelectionPortal: React.FC<TestamentSelectionPortalProps> =
             雙語四部並行聖經對照庫 · 舊約 39 卷 · 新約 27 卷 · 隨時可於頂部點選返回重選新舊約
           </p>
           <p className="text-[11px] text-stone-400">
-            四部並行：和合本 (CUNP 神版) → 教會 KSV → JST 靈感譯本 → 谷歌翻譯中文
+            四部並行：和合本 (CUNP 神版) → 教會 KJV → JST 靈感譯本 → 谷歌翻譯中文
           </p>
         </div>
       </footer>
